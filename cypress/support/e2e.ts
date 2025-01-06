@@ -1,23 +1,29 @@
-// @ts-check
 import "@cypress/code-coverage/support";
 import "./commands";
-import { isMobile } from "./utils";
+import { generateRandomBankAccount, generateRandomUser } from "./utils/user-utils";
 
-beforeEach(() => {
-  // cy.intercept middleware to remove 'if-none-match' headers from all requests
-  // to prevent the server from returning cached responses of API requests
-  cy.intercept(
-    { url: "http://localhost:3000/**", middleware: true },
-    (req) => delete req.headers["if-none-match"]
-  );
+before("Global Setup", function () {
+  cy.log("Set up global variables");
+  const user = generateRandomUser();
+  const bankAccount = generateRandomBankAccount();
 
-  // Throttle API responses for mobile testing to simulate real world condition
-  if (isMobile()) {
-    cy.intercept({ url: "http://localhost:3000/**", middleware: true }, (req) => {
-      req.on("response", (res) => {
-        // Throttle the response to 1 Mbps to simulate a mobile 3G connection
-        res.setThrottle(1000);
-      });
-    });
-  }
+  cy.log("Sign up new user");
+  cy.signUpByApi(user);
+  Cypress.env("signedUpUser", user);
+  cy.log(`Signed up user: ${JSON.stringify(user)}`);
+
+  cy.log("Sign in with new user");
+  cy.signInByApi(user).then((response) => {
+    Cypress.env("cookies", response.headers["set-cookie"]);
+  });
+
+  cy.log("Create a new bank account");
+  cy.createBankAccountByGraphQL(bankAccount);
+  Cypress.env("bankAccount", bankAccount);
+  cy.log(`Created bank account: ${JSON.stringify(bankAccount)}`);
+
+  cy.log("Get all existing users and save to fixture file");
+  cy.getUsersByApi().then((users) => {
+    cy.task("writeFile", { filename: "users.json", content: users });
+  });
 });
