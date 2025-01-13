@@ -1,8 +1,6 @@
 import path from "path";
-import _ from "lodash";
-import axios from "axios";
+import fs from "fs";
 import dotenv from "dotenv";
-import Promise from "bluebird";
 import { percyHealthCheck } from "@percy/cypress/task";
 import codeCoverageTask from "@cypress/code-coverage/task";
 import { defineConfig } from "cypress";
@@ -64,39 +62,26 @@ module.exports = defineConfig({
   },
   e2e: {
     baseUrl: "http://localhost:3000",
+    signedUpUser: {},
+    cookies: [],
+    bankAccount: {},
     specPattern: "cypress/tests/**/*.spec.{js,jsx,ts,tsx}",
     supportFile: "cypress/support/e2e.ts",
     viewportHeight: 1000,
     viewportWidth: 1280,
     setupNodeEvents(on, config) {
-      const testDataApiEndpoint = `${config.env.apiUrl}/testData`;
-
-      const queryDatabase = ({ entity, query }, callback) => {
-        const fetchData = async (attrs) => {
-          const { data } = await axios.get(`${testDataApiEndpoint}/${entity}`);
-          return callback(data, attrs);
-        };
-
-        return Array.isArray(query) ? Promise.map(query, fetchData) : fetchData(query);
-      };
-
       on("task", {
         percyHealthCheck,
-        async "db:seed"() {
-          // seed database with test data
-          const { data } = await axios.post(`${testDataApiEndpoint}/seed`);
-          return data;
+        log(message) {
+          console.log(message);
+          return null;
         },
-
-        // fetch test data from a database (MySQL, PostgreSQL, etc...)
-        "filter:database"(queryPayload) {
-          return queryDatabase(queryPayload, (data, attrs) => _.filter(data.results, attrs));
-        },
-        "find:database"(queryPayload) {
-          return queryDatabase(queryPayload, (data, attrs) => _.find(data.results, attrs));
+        writeFile({ filename, content }) {
+          const filePath = path.join(__dirname, "cypress", "fixtures", filename);
+          fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
+          return null;
         },
       });
-
       codeCoverageTask(on, config);
       return config;
     },

@@ -1,44 +1,11 @@
 /// <reference types="cypress" />
 
 declare namespace Cypress {
-  import { authService } from "../src/machines/authMachine";
-  import { createTransactionService } from "../src/machines/createTransactionMachine";
-  import { publicTransactionService } from "../src/machines/publicTransactionsMachine";
-  import { contactsTransactionService } from "../src/machines/contactsTransactionsMachine";
-  import { personalTransactionService } from "../src/machines/personalTransactionsMachine";
-  import {
-    User,
-    BankAccount,
-    Like,
-    Comment,
-    Transaction,
-    BankTransfer,
-    Contact,
-  } from "../src/models";
-
-  interface CustomWindow extends Window {
-    authService: typeof authService;
-    createTransactionService: typeof createTransactionService;
-    publicTransactionService: typeof publicTransactionService;
-    contactTransactionService: typeof contactsTransactionService;
-    personalTransactionService: typeof personalTransactionService;
-  }
-
-  type dbQueryArg = {
-    entity: string;
-    query: object | [object];
-  };
-
   type LoginOptions = {
     rememberUser: boolean;
   };
 
   interface Chainable {
-    /**
-     *  Window object with additional properties used during test.
-     */
-    window(options?: Partial<Loggable & Timeoutable>): Chainable<CustomWindow>;
-
     /**
      * Custom command to make taking Percy snapshots with full name formed from the test title + suffix easier
      */
@@ -47,102 +14,44 @@ declare namespace Cypress {
     getBySel(dataTestAttribute: string, args?: any): Chainable<JQuery<HTMLElement>>;
     getBySelLike(dataTestPrefixAttribute: string, args?: any): Chainable<JQuery<HTMLElement>>;
 
-    /**
-     *  Cypress task for directly querying to the database within tests
-     */
-    task(
-      event: "filter:database",
-      arg: dbQueryArg,
-      options?: Partial<Loggable & Timeoutable>
-    ): Chainable<any[]>;
+    fillSignUpForm(newUser: User): void;
 
-    /**
-     *  Cypress task for directly querying to the database within tests
-     */
-    task(
-      event: "find:database",
-      arg?: any,
-      options?: Partial<Loggable & Timeoutable>
-    ): Chainable<any>;
+    signUp(newUser: User): void;
 
-    /**
-     * Find a single entity via database query
-     */
-    database(operation: "find", entity: string, query?: object, log?: boolean): Chainable<any>;
+    fillSignInForm(newUser: User): void;
 
-    /**
-     * Filter for data entities via database query
-     */
-    database(operation: "filter", entity: string, query?: object, log?: boolean): Chainable<any>;
+    signIn(newUser: User, loginOptions?: LoginOptions): void;
 
-    /**
-     * Fetch React component instance associated with received element subject
-     */
-    reactComponent(): Chainable<any>;
+    fillUserDetailsForm(user: User): void;
 
-    /**
-     * Select data range within date range picker component
-     */
-    pickDateRange(startDate: Date, endDate: Date): Chainable<void>;
+    updateUserDetails(newUser: User): void;
 
-    /**
-     * Select transaction amount range
-     */
-    setTransactionAmountRange(min: number, max: number): Chainable<any>;
+    fillNewBankAccountForm(bankAccount: BankAccount): void;
 
-    /**
-     * Paginate to the next page in transaction infinite-scroll pagination view
-     */
-    nextTransactionFeedPage(service: string, page: number): Chainable<any>;
+    createBankAccount(bankAccount: BankAccount): void;
 
-    /**
-     * Logs-in user by using UI
-     */
-    login(username: string, password: string, loginOptions?: LoginOptions): void;
+    signUpByApi(newUser: User): Chainable<User>;
 
-    /**
-     * Logs-in user by using API request
-     */
-    loginByApi(username: string, password?: string): Chainable<Response>;
+    signInByApi(user: User): Chainable<User>;
 
-    /**
-     * Logs-in user by using Google API request
-     */
-    loginByGoogleApi(): Chainable<Response>;
+    getCurrentUserByApi(): Chainable<User>;
 
-    /**
-     * Logs-in user by using Okta API request
-     */
-    loginByOktaApi(username: string, password?: string): Chainable<Response>;
+    getUsersByApi(): Chainable<User[]>;
 
-    /**
-     * Logs in bypassing UI by triggering XState login event
-     */
-    loginByXstate(username: string, password?: string): Chainable<any>;
+    getUserProfileByApi(username: string): Chainable<User>;
 
-    /**
-     * Logs out via bypassing UI by triggering XState logout event
-     */
-    logoutByXstate(): Chainable<string>;
+    getBankAccountsByApi(): Chainable<BankAccount[]>;
 
-    /**
-     * Logs in via Auth0 API
-     */
-    loginByAuth0Api(username: string, password?: string): Chainable<any>;
+    getBankAccountByApi(bankAccountId: string): Chainable<BankAccount>;
 
-    /**
-     * Switch current user by logging out current user and logging as user with specified username
-     */
-    switchUserByXstate(username: string): Chainable<any>;
+    createBankAccountByGraphQL(bankAccount: BankAccount): Chainable<BankAccount>;
 
-    /**
-     * Create Transaction via bypassing UI and using XState createTransactionService
-     */
-    createTransaction(payload): Chainable<any>;
+    deleteBankAccountByApi(bankAccountId: string): Chainable<BankAccount>;
 
-    /**
-     * Logs in to AWS Cognito via Amplify Auth API bypassing UI using Cypress Task
-     */
-    loginByCognitoApi(username: string, password: string): Chainable<any>;
+    createTransactionByApi(transaction: Transaction): Chainable<Transaction>;
+
+    createTransactionCommentByApi(transactionId: string, comment: string): Chainable<Transaction>;
+
+    getTransactionByApi(transactionId: string): Chainable<Transaction>;
   }
 }
